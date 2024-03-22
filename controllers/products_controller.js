@@ -24,7 +24,6 @@ async function AddProduct(req, res) {
         Img
       });
       await newProduct.save();
-      console.log(newProduct);
       res.status(201).json({message:"product add successfuly"})
     } 
     catch (error) {
@@ -33,6 +32,26 @@ async function AddProduct(req, res) {
         
     }
   }
+
+  async function deleteProduct(req, res) {
+    try {
+        const { _id } = req.body;
+
+        // Check if the product exists
+        const existingProduct = await ProductsSchema.findOne({ _id });
+        if (!existingProduct) {
+            return res.status(404).json({ message: "Failed to delete. Product not found." });
+        }
+
+        // Delete the product
+        await ProductsSchema.deleteOne({ _id });
+
+        return res.status(200).json({ message: "Product deleted successfully." });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
 
 
 
@@ -76,7 +95,7 @@ async function AddProduct(req, res) {
   async function getproducts(req, res) {
     try {
         const products=await ProductsSchema.find()
-        console.log(products);
+        //console.log(products);
       res.status(201).json({products})
     } 
     catch (error) 
@@ -91,4 +110,5 @@ async function AddProduct(req, res) {
   module.exports={
     AddProduct,
     getproducts,
+    deleteProduct
   }
