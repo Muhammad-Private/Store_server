@@ -119,6 +119,7 @@
   },
   "keywords": [],
   "author": "",
+  "name":"blog_project_crud_operations_mongodb",
   "license": "ISC",
   "description": "",
   "devDependencies": {
