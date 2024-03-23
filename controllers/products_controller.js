@@ -17,11 +17,11 @@ const upload = multer({ storage })
 
 async function AddProduct(req, res) {
     try {
-       const { ProductName ,Price ,Img}=req.body;
+       const { ProductName ,Price ,Image}=req.body;
        const newProduct = new ProductsSchema({
         ProductName,
         Price,
-        Img
+        Image
       });
       await newProduct.save();
       res.status(201).json({message:"product add successfuly"})
