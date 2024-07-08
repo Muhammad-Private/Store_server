@@ -2,7 +2,17 @@ const express=require(`express`);
 const Router=express.Router();
 const products_controller=require(`../controllers/products_controller`);
 const multer = require('multer');
-const storage = multer.memoryStorage(); // Store uploaded file in memory as buffer
+
+// Set up Multer storage and file filter
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Set the upload directory
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`); // Use unique filename
+  }
+});
+
 const upload = multer({ storage: storage });
 
 

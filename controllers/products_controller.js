@@ -3,10 +3,11 @@ const ProductsSchema = require('../models/Products_schema');
 async function AddProduct(req, res) {
   try {
     const { ProductName, Price } = req.body;
+    const imagePath = req.file.path;
     const newProduct = new ProductsSchema({
       ProductName,
       Price,
-      Image:""
+      Image:imagePath
     });
     await newProduct.save();
     res.status(201).json({ message: "Product added successfully" });
