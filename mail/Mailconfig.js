@@ -17,8 +17,8 @@ var mailOptions = {
     host:`smtp.gmail.com`,
     service: 'gmail',
     auth: {
-      user: process.env.email,
-      pass: process.env.password,
+      user: process.env.user,
+      pass: process.env.pass,
     },
   });
 
