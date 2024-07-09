@@ -1,6 +1,6 @@
 const ProductsSchema = require('../models/Products_schema');
 const multer = require('multer');
-
+const fs = require('fs');
 
 // Set up Multer storage and file filter
 const storage = multer.diskStorage({
@@ -41,16 +41,23 @@ async function deleteProduct(req, res) {
   try {
     const { _id } = req.body;
     const existingProduct = await ProductsSchema.findOne({ _id });
-    if (!existingProduct) 
-    {
+
+    if (!existingProduct) {
       return res.status(404).json({ message: "Failed to delete. Product not found." });
     }
-    // Delete the product
+
+    const imagePath = existingProduct.Image;
+
+    // Delete the product from the database
     await ProductsSchema.deleteOne({ _id });
-    return res.status(200).json({ message: "Product deleted successfully." });
+
+    // Delete the image file from the uploads directory
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+    }
+         return res.status(200).json({ message: "Product deleted successfully." });
   } 
-  catch (error) 
-  {
+  catch (error) {
     return res.status(500).json({ message: error.message });
   }
 }

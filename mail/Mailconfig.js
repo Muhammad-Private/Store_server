@@ -1,5 +1,6 @@
 
 var nodemailer = require('nodemailer');
+require('dotenv').config();
 var mailOptions = {
     from: ``,
     to: ``,
@@ -11,13 +12,13 @@ var mailOptions = {
 
 
   var transporter = nodemailer.createTransport({
-    port: 587,
-    secure: false,
+    port: 465,
+    secure: true,
     host:`smtp.gmail.com`,
     service: 'gmail',
     auth: {
-      user: 'aboakfe97@gmail.com',
-      pass: 'zubc ohnh sghn btfb',
+      user: process.env.email,
+      pass: process.env.password,
     },
   });
 
