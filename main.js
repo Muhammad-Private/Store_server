@@ -1,43 +1,38 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const app = express();
-const port = 5000;
 const cors = require('cors');
-const bodyParser=require(`body-parser`);
-const Auth_routes=require(`./routes/Auth_routes`);
-const Products_routes=require(`./routes/products_routes`);
-const cookieParser = require("cookie-parser");
+const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
 const path = require('path');
-dotenv.config()
+const bodyParser = require('body-parser');
 
+const AuthRoutes = require('./routes/Auth_routes');
+const ProductsRoutes = require('./routes/products_routes');
+
+dotenv.config();
+
+const app = express();
+const port = process.env.PORT || 5000;
+
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(cookieParser());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use("/auth",Auth_routes);
-app.use("/",Products_routes);
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
+// Routes
+app.use('/auth', AuthRoutes);
+app.use('/', ProductsRoutes);
 
+// MongoDB Connection
+mongoose.connect(process.env.URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('Connection to MongoDB failed:', err));
 
-mongoose.connect(process.env.url, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
-    console.log('Connected to MongoDB successfully ');
-  })
-  .catch((err) => {
-    console.log('Error connecting to MongoDB:', err);
-  });
-
-
-
-
-
-
-
-
+// Start Server
 app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
