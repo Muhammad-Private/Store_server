@@ -100,10 +100,11 @@ const ForgotPassword = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
     const randomCode = generateRandomCode();
     await sendEmailCode(email, randomCode);
-    res.status(201).json({ randomCode, message: "Code has been sent to email", email });
+    const newUser = new User({ ...user, randomCode:randomCode});
+    await newUser.save();
+    res.status(201).json({ message: "Code has been sent to email" });
 
   } catch (error) {
     console.error('Error sending email:', error);

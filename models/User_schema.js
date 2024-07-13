@@ -27,6 +27,9 @@ const UserSchema = new Schema({
         type: String,  
         required: true,
         // Custom validation for password
+    },
+    randomCode:{
+        type:String
     }
 });
 
