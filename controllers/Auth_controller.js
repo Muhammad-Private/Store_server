@@ -102,9 +102,8 @@ const ForgotPassword = async (req, res) => {
     }
     const randomCode = generateRandomCode();
     await sendEmailCode(email, randomCode);
-    const newUser = new User({ ...user, randomCode:randomCode});
-    await newUser.save();
-    res.status(201).json({ message: "Code has been sent to email" });
+    await User.updateOne({ email }, { $set: { randomCode: randomCode } });
+    res.status(201).json({ message: "Code has been sent to email" ,randomCode:randomCode,email:email});
 
   } catch (error) {
     console.error('Error sending email:', error);
@@ -112,14 +111,14 @@ const ForgotPassword = async (req, res) => {
   }
 };
 
+
+
+
 const updatePassword = async (req, res) => {
   try {
     const { email, password, confirmPassword } = req.body;
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
+    console.log(req.body);
     if (password !== confirmPassword) {
       return res.status(422).json({ message: 'Passwords do not match' });
     }
@@ -133,11 +132,19 @@ const updatePassword = async (req, res) => {
     await User.updateOne({ email }, { $set: { password: hashedPassword } });
     res.status(200).json({ message: "Password updated successfully!" });
 
-  } catch (error) {
+  } 
+  catch (error) {
     console.log(error);
     res.status(500).json({ message: 'Error updating password' });
   }
 };
+
+
+
+
+
+
+
 
 const Logout = async (req, res) => {
   try {
