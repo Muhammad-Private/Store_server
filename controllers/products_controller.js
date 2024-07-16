@@ -35,12 +35,8 @@ async function deleteProduct(req, res) {
     const imagePath = existingProduct.Image;
 
     // Delete the product from the database
-    await ProductsSchema.deleteOne({ _id });
+        await ProductsSchema.deleteOne({ _id });
 
-    // Delete the image file from the uploads directory
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
-    }
          return res.status(200).json({ message: "Product deleted successfully." });
   } 
   catch (error) {

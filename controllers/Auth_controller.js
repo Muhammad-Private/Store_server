@@ -2,66 +2,37 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const dotenv = require('dotenv');
 const User = require('../models/User_schema');
-const { mailOptions, transporter } = require('../mail/Mailconfig');
+const { generateRandomCode, sendEmailCode } = require('../servies/user.servies');
 
 dotenv.config();
-
-const generateRandomCode = () => {
-  const min = 100000;
-  const max = 999999;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-
-const hashPassword = async (plainTextPassword) => {
-  const saltRounds = 10;
-  return bcrypt.hash(plainTextPassword, saltRounds);
-};
-
-const sendEmailCode = (email, randomCode) => {
-  const MailOptions = {
-    ...mailOptions,
-    to: email,
-    text: `Your verification code is: ${randomCode}`,
-  };
-  return new Promise((resolve, reject) => {
-    transporter.sendMail(MailOptions, (error, info) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(info);
-      }
-    });
-  });
-};
 
 const Register = async (req, res) => {
   try {
     const { username, email, password, confirmPassword } = req.body;
 
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(422).json({ message: 'Username or Email already exists' });
     }
-    if (password !== confirmPassword) {
-      return res.status(422).json({ message: 'Passwords do not match' });
-    }
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password)) {
-      return res.status(422).json({ message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' });
-    }
 
-    const hashedPassword = await hashPassword(password);
-    const newUser = new User({ username, email, password: hashedPassword });
+    const newUser = new User({ username, email, password, confirmPassword });
     await newUser.save();
 
-    const access_token = jwt.sign({ userId: newUser._id }, process.env.ACCESS_KEY, { expiresIn: '15' });
+    const access_token = jwt.sign({ userId: newUser._id }, process.env.ACCESS_KEY, { expiresIn: '15m' });
     const refresh_token = jwt.sign({ userId: newUser._id }, process.env.REFRESH_KEY, { expiresIn: '1d' });
+
     res.cookie("jwt", refresh_token, {
       httpOnly: true,
       secure: true,
-      maxAge: 3600000,
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
     }).status(201).json({ message: "User created successfully 😊 👌", access_token });
 
-  } catch (error) {
+  } 
+  catch (error) {
+    if (error.name === 'ValidationError') {
+      // Send validation error messages to the client
+      return res.status(422).json({ message: error.errors.confirmPassword.message });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -82,6 +53,7 @@ const Login = async (req, res) => {
 
     const access_token = jwt.sign({ userId: existingUser._id }, process.env.ACCESS_KEY, { expiresIn: '15m' });
     const refresh_token = jwt.sign({ userId: existingUser._id }, process.env.REFRESH_KEY, { expiresIn: '1d' });
+
     res.cookie("jwt", refresh_token, {
       httpOnly: true,
       secure: true,
@@ -96,14 +68,18 @@ const Login = async (req, res) => {
 const ForgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) {
+    const existingUser = await User.findOne({ email });
+
+    if (!existingUser) {
       return res.status(404).json({ message: 'User not found' });
     }
+
     const randomCode = generateRandomCode();
     await sendEmailCode(email, randomCode);
-    await User.updateOne({ email }, { $set: { randomCode: randomCode } });
-    res.status(201).json({ message: "Code has been sent to email" ,randomCode:randomCode,email:email});
+
+    await User.updateOne({ email }, { $set: { randomCode } });
+
+    res.status(201).json({ message: "Code has been sent to email" });
 
   } catch (error) {
     console.error('Error sending email:', error);
@@ -111,42 +87,33 @@ const ForgotPassword = async (req, res) => {
   }
 };
 
-
-
-
 const updatePassword = async (req, res) => {
   try {
     const { email, password, confirmPassword } = req.body;
-    const user = await User.findOne({ email });
-    console.log(req.body);
+
+    const existingUser = await User.findOne({ email });
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     if (password !== confirmPassword) {
       return res.status(422).json({ message: 'Passwords do not match' });
     }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (match) {
-      return res.status(422).json({ message: 'The password must not be the previous one.' });
-    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const hashedPassword = await hashPassword(password);
-    await User.updateOne({ email }, { $set: { password: hashedPassword } });
+    await User.updateOne({ email }, { $set: { password: hashedPassword, confirmPassword: undefined } });
+
     res.status(200).json({ message: "Password updated successfully!" });
 
-  } 
-  catch (error) {
+  } catch (error) {
     console.log(error);
     res.status(500).json({ message: 'Error updating password' });
   }
 };
 
-
-
-
-
-
-
-
-const Logout = async (req, res) => {
+const Logout = (req, res) => {
   try {
     res.clearCookie("jwt", { httpOnly: true, secure: true }).status(200).json({ message: "Logged out successfully" });
   } catch (error) {
