@@ -6,6 +6,8 @@ const { generateRandomCode, sendEmailCode } = require('../servies/user.servies')
 
 dotenv.config();
 
+
+
 const Register = async (req, res) => {
   try {
     const { username, email, password, confirmPassword } = req.body;
@@ -26,7 +28,6 @@ const Register = async (req, res) => {
       secure: true,
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
     }).status(201).json({ message: "User created successfully 😊 👌", access_token });
-
   } 
   catch (error) {
     if (error.name === 'ValidationError') {
@@ -40,13 +41,13 @@ const Register = async (req, res) => {
 const Login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const existingUser = await User.findOne({ email });
-    if (!existingUser) {
+    if (!existingUser) 
+      {
       return res.status(404).json({ message: 'User not found' });
     }
-
     const match = await bcrypt.compare(password, existingUser.password);
+    
     if (!match) {
       return res.status(401).json({ message: 'Invalid Password' });
     }
@@ -96,8 +97,9 @@ const updatePassword = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    if (password !== confirmPassword) {
-      return res.status(422).json({ message: 'Passwords do not match' });
+    const { isValid, message } = existingUser.validatePassword(password, confirmPassword);
+    if (!isValid) {
+      return res.status(422).json({ message });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -105,8 +107,7 @@ const updatePassword = async (req, res) => {
 
     await User.updateOne({ email }, { $set: { password: hashedPassword, confirmPassword: undefined } });
 
-    res.status(200).json({ message: "Password updated successfully!" });
-
+    res.status(200).json({ message: 'Password updated successfully!' });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: 'Error updating password' });
