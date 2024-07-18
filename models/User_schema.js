@@ -35,14 +35,16 @@ const UserSchema = new Schema({
 // Add a method to the schema for password validation
 UserSchema.methods.validatePassword = function (password, confirmPassword) {
   const passwordValidation = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password);
-  if (!passwordValidation) {
+  if (!passwordValidation) 
+    {
     return {
       isValid: false,
       message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number, and be at least 8 characters long',
     };
   }
 
-  if (password !== confirmPassword) {
+  if (password !== confirmPassword) 
+    {
     return {
       isValid: false,
       message: 'Passwords do not match',

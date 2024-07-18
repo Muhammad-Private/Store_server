@@ -116,7 +116,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon main.js"
+    "start": "nodemon app.js"
   },
   "keywords": [],
   "license": "ISC",

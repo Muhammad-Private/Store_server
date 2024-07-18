@@ -1,27 +1,24 @@
 const ProductsSchema = require('../models/Products_schema');
 
-
-
-
-
-async function AddProduct(req, res) 
-{
+async function AddProduct(req, res) {
   try {
     const { ProductName, Price } = req.body;
+    const path=req.file.path;
     const newProduct = new ProductsSchema({
       ProductName,
       Price,
-      Image:''
+      Image: path
     });
+
     await newProduct.save();
     res.status(201).json({ message: "Product added successfully" });
-  } 
-  catch (error) 
-  {
+  } catch (error) {
     console.log(error);
-    res.status(500).json({ message: error });
+    res.status(500).json({ message: error.message });
   }
 }
+
+
 
 async function deleteProduct(req, res) {
   try {
@@ -32,30 +29,27 @@ async function deleteProduct(req, res) {
       return res.status(404).json({ message: "Failed to delete. Product not found." });
     }
 
-    const imagePath = existingProduct.Image;
+    await ProductsSchema.deleteOne({ _id });
 
-    // Delete the product from the database
-        await ProductsSchema.deleteOne({ _id });
-
-         return res.status(200).json({ message: "Product deleted successfully." });
-  } 
-  catch (error) {
+    return res.status(200).json({ message: "Product deleted successfully." });
+  } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 }
 
-async function getproducts(req, res) {
+
+
+async function getProducts(req, res) {
   try {
     const products = await ProductsSchema.find();
-    res.status(200).json({ data:products });
-  } 
-  catch (error) {
+    res.status(200).json({ data: products });
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 }
 
 module.exports = {
   AddProduct,
-  getproducts,
+  getProducts,
   deleteProduct,
 };
