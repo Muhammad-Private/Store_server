@@ -5,7 +5,7 @@ const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 const path = require('path');
 
 const Auth_routes=require(`./routes/Auth_routes`)
@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 // Serve static files from the "public" directory
-app.use(express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(cors());
 app.use(cookieParser());
 
