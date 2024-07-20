@@ -1,6 +1,8 @@
 const ProductsSchema = require('../models/Products_schema');
 const fs = require('fs');
 const path = require('path');
+
+
 async function AddProduct(req, res) {
   try {
     const { ProductName, Price } = req.body;
@@ -42,7 +44,8 @@ async function deleteProduct(req, res) {
     // Delete the product from the database
     await ProductsSchema.deleteOne({ _id });
     return res.status(200).json({ message: "Product deleted successfully." });
-  } catch (error) {
+  } 
+  catch (error) {
     return res.status(500).json({ message: error.message });
   }
 }
