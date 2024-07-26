@@ -11,32 +11,41 @@ dotenv.config();
 const Register = async (req, res) => {
   try {
     const { username, email, password, confirmPassword } = req.body;
-    console.log(req.body);
+
+    // Check if the password and confirmPassword fields match
+    if (password !== confirmPassword) {
+      return res.status(422).json({ message: "Passwords do not match" });
+    }
+
+    // Check if a user with the given email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(422).json({ message: 'Username or Email already exists' });
+      return res.status(422).json({ message: "Username or Email already exists" });
     }
 
-    const newUser = new User({ username, email, password, confirmPassword });
+    // Create and save the new user
+    const newUser = new User({ username:username, email:email, password:password });
     await newUser.save();
 
-    const access_token = jwt.sign({ userId: newUser._id }, process.env.ACCESS_KEY, { expiresIn: '15m' });
-    const refresh_token = jwt.sign({ userId: newUser._id }, process.env.REFRESH_KEY, { expiresIn: '1d' });
+    // Generate JWT tokens
+    const access_token = jwt.sign({ userId: newUser._id }, process.env.ACCESS_KEY, { expiresIn: "15m" });
+    const refresh_token = jwt.sign({ userId: newUser._id }, process.env.REFRESH_KEY, { expiresIn: "1d" });
 
+    // Set the refresh token as an HTTP-only cookie and send the response
     res.cookie("jwt", refresh_token, {
-      httpOnly: true,
-      secure: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
-    }).status(201).json({ message: "User created successfully 😊 👌", access_token });
+        httpOnly: true,
+        secure: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      })
+      .status(201)
+      .json({ message: "User created successfully 😊 👌", access_token });
   } 
   catch (error) {
-    if (error.name === 'ValidationError') {
-      // Send validation error messages to the client
-      return res.status(422).json({ message: error.errors.confirmPassword.message });
-    }
+
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 

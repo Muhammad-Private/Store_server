@@ -22,18 +22,13 @@ const UserSchema = new Schema({
       message: props => `${props.value} 'Password must contain at least one uppercase letter, one lowercase letter, and one number, and be at least 8 characters long'`,
     },
   },
-  // Adding confirmPassword to the schema
-  confirmPassword: {
-    type: String,
-    required: true,
-  }
 });
 
 
 
 
 // Add a method to the schema for password validation
-UserSchema.methods.validatePassword = function (password, confirmPassword) {
+UserSchema.methods.validatePassword = function (password) {
   const passwordValidation = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password);
   if (!passwordValidation) 
     {
@@ -42,15 +37,6 @@ UserSchema.methods.validatePassword = function (password, confirmPassword) {
       message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number, and be at least 8 characters long',
     };
   }
-
-  if (password !== confirmPassword) 
-    {
-    return {
-      isValid: false,
-      message: 'Passwords do not match',
-    };
-  }
-
   return { isValid: true };
 };
 
@@ -68,7 +54,7 @@ UserSchema.pre('save', async function (next) {
     return next();
   }
 
-  const { isValid, message } = user.validatePassword(user.password, user.confirmPassword);
+  const { isValid, message } = user.validatePassword(user.password);
   if (!isValid) {
     const validationError = new mongoose.Error.ValidationError(user);
     validationError.errors.password = new mongoose.Error.ValidatorError({
